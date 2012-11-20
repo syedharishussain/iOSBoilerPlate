@@ -12,15 +12,49 @@
 
 @implementation AppDelegate
 
+@synthesize window;
+@synthesize navigationController;
+@synthesize viewController;
+@synthesize managedObjectContext;
+@synthesize persistentStoreCoordinator;
+@synthesize managedObjectModel;
+
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-    // Override point for customization after application launch.
-    self.viewController = [[ViewController alloc] initWithNibName:@"ViewController" bundle:nil];
-    self.window.rootViewController = self.viewController;
+    self.window.backgroundColor = [UIColor whiteColor];
     [self.window makeKeyAndVisible];
+    
+    [self createNavigationController];
+    
     return YES;
 }
+
+#pragma mark - App Delegate Shared Instance
+
++ (AppDelegate*)sharedDelegate{
+    
+    return (AppDelegate*)[[UIApplication sharedApplication] delegate];
+}
+
+#pragma mark - Navigation Controller and RootViewController 
+
+- (void)createNavigationController{
+    if (navigationController == nil) 
+        navigationController = [[UINavigationController alloc]
+                                 initWithRootViewController:[self getRootViewController]];
+    
+    [self.window addSubview:navigationController.view];
+}
+
+- (ViewController*)getRootViewController{
+    if (viewController == nil) 
+        viewController = [[ViewController alloc] init];
+    
+    return viewController;
+}
+
+#pragma mark - App Delegate Life Cycle
 
 - (void)applicationWillResignActive:(UIApplication *)application
 {
@@ -47,6 +81,43 @@
 - (void)applicationWillTerminate:(UIApplication *)application
 {
     // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
+}
+
+#pragma mark - CoreData Methods
+
++ (NSManagedObjectContext*)objectModel{
+    AppDelegate *appDelegate = (AppDelegate*)[[UIApplication sharedApplication] delegate];
+    return appDelegate.managedObjectContext;
+}
+
+- (void)saveContext
+{
+    NSError *error = nil;
+    NSManagedObjectContext *localManagedObjectContext = self.managedObjectContext;
+    if (localManagedObjectContext != nil)
+    {
+        if ([localManagedObjectContext hasChanges] && ![localManagedObjectContext save:&error])
+        {
+            /*
+             Replace this implementation with code to handle the error appropriately.
+             
+             abort() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
+             */
+            NSLog(@"Unresolved error %@, %@", error, [error userInfo]);
+            abort();
+        }
+    }
+}
+
+- (NSManagedObjectModel *)managedObjectModel
+{
+    if (managedObjectModel != nil)
+    {
+        return managedObjectModel;
+    }
+    NSURL *modelURL = [[NSBundle mainBundle] URLForResource:@"SlopeTours" withExtension:@"momd"];
+    managedObjectModel = [[NSManagedObjectModel alloc] initWithContentsOfURL:modelURL];
+    return managedObjectModel;
 }
 
 @end
